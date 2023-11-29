@@ -5,17 +5,17 @@ that this repo will implement.
 
 ## Installation
 
-1. Clone this repo. `git clone git@github.com:alloy-org/plugin-template.git`
-2. Copy its contents to a directory with the name of your plugin. `cp -r plugin-template my-cool-plugin`
-3. `cd my-cool-plugin`
-4. Install node and npm with your package manager of choice. `brew install node` or `apt install nodejs` 
-5. Run `npm install` to install the packages (jest, fetch (for Jest)).  
-6. Set up your repo as the remote origin. `git remote set-url origin git@github.com:my-org/my-cool-plugin.git`
-7. Push your repo to GitHub. `git push`
-8. 🎉
-Optional
-9. If you are going to use any secret keys, put them in `.env.example`, then copy that to `.env` 
+1. Clone this repo. `git clone git@github.com:alloy-org/plugin-template.git && cd plugin-template`
+1. Run the script to initialize your new plugin, giving it a name (one word): `./create-amplenote-plugin MY-PLUGIN-NAME`
+1. Install node and npm with your package manager of choice: `brew install node` or `apt install nodejs`
+1. Run `cd MY-PLUGIN-NAME; npm install` to install the needed packages
+1. Set up your repo as the remote origin. `git remote set-url origin git@github.com:my-org/my-cool-plugin.git`
+
+Optionally - If you are going to use any secret keys, put them in `.env.example`, then copy that to `.env` 
    and fill in whatever environment variables you need
+
+## Using the Plugin Builder
+TODO: write about this process
 
 ## Testing
 
