@@ -1,19 +1,33 @@
-import dotenv from "dotenv"
-import esbuild from "esbuild"
+import * as esbuild from 'esbuild';
+import {promises as fs} from "fs";
 
-dotenv.config();
+const repositoryPath = process.argv[2];
 
-// Taken from internet recommendation on getting an esbuild https://medium.com/geekculture/build-a-library-with-esbuild-23235712f3c
-// Will we actually need to build this? TBD
-esbuild
-    .build({
-        entryPoints: ["src/index.js"],
-        outdir: "lib",
-        bundle: true,
-        sourcemap: true,
-        minify: true,
-        splitting: true,
-        format: "esm",
-        target: ["esnext"]
-    })
-    .catch(() => process.exit(1));
+function processRepository(repositoryPath) {
+  // TODO: add multiple possible entry points
+  esbuild.build({
+    entryPoints: [`${repositoryPath}/plugin.js`],
+    bundle: true,
+    write: false, // Don't write to disk, return in outputFiles instead
+    outdir: 'out',
+  }).then((result) => {
+    for (let out of result.outputFiles) {
+      const result = out.text.replace(/^}\)\(\);$/gm, "  return plugin;\n})()");
+      const outputFile = `${repositoryPath}/out.plugin.js`;
+      return fs.writeFile(outputFile, result);
+    }
+  }).then(() => {
+    console.log('File has been written successfully');
+  })
+  .catch(err => {
+    console.error('Error:', err);
+    process.exit(1);
+  });
+}
+
+if (!repositoryPath) {
+  console.error('Please provide the path of the repository as a command-line argument.');
+  process.exit(1);
+}
+
+processRepository(repositoryPath);
