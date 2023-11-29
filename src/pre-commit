@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo "Executing pre-commit hook..."
+echo "Bundling plugin into a single file..."
+
+node ../../esbuild.js ../../lib/

@@ -1,4 +1,4 @@
-import * as esbuild from 'esbuild';
+import * as esbuild from 'src/esbuild.js';
 import {promises as fs} from "fs";
 
 const repositoryPath = process.argv[2];
