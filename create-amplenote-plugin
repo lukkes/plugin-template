@@ -15,13 +15,17 @@ script_dir="$(dirname "$script_path")"
 # Create the repository directory
 repo_path="$script_dir"/"$plugin_name"
 mkdir "$repo_path"
+
 # Initialize a git repository
 pushd "$repo_path"
 git init
 # Copy the plugin template files into the new repo
-cp -r "$script_dir"/lib "$repo_path"
-cp "$script_dir"/src/esbuild.js "$repo_path"
-cp "$script_dir"/src/pre-commit "$repo_path"/.git/hooks
-cp "$script_dir"/src/README.md "$repo_path"
+cp -r "$script_dir"/lib .
+cp "$script_dir"/src/esbuild.js .
+cp "$script_dir"/src/pre-commit ./.git/hooks
+cp "$script_dir"/src/README.md .
+sed -i".backup" -e "s/# Your Cool Amplenote Plugin/# $plugin_name/" ./README.md
+rm ./README.md.backup
 cp "$script_dir"/.gitignore "$script_dir"/jest.config.js "$script_dir"/jsconfig.json "$script_dir"/LICENSE \
-  "$script_dir"/package.json "$script_dir"/package-lock.json "$repo_path"
+  "$script_dir"/package.json "$script_dir"/package-lock.json .
+popd
