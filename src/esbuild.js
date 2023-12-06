@@ -1,9 +1,17 @@
-import * as esbuild from 'src/esbuild.js';
-import {promises as fs} from "fs";
+import * as esbuild from 'esbuild';
+import { promises as fs } from "fs";
 
 const repositoryPath = process.argv[2];
 
-function processRepository(repositoryPath) {
+async function processRepository(repositoryPath) {
+  // Check and create the dist directory if it doesn't exist
+  const distDir = `${repositoryPath}/../dist`;
+  try {
+    await fs.access(distDir);
+  } catch {
+    await fs.mkdir(distDir, { recursive: true });
+  }
+
   // TODO: add multiple possible entry points
   esbuild.build({
     entryPoints: [`${repositoryPath}/plugin.js`],
@@ -13,7 +21,7 @@ function processRepository(repositoryPath) {
   }).then((result) => {
     for (let out of result.outputFiles) {
       const result = out.text.replace(/^}\)\(\);$/gm, "  return plugin;\n})()");
-      const outputFile = `${repositoryPath}/out.plugin.js`;
+      const outputFile = `${distDir}/out.plugin.js`;
       return fs.writeFile(outputFile, result);
     }
   }).then(() => {
