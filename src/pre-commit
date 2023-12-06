@@ -3,4 +3,6 @@
 echo "Executing pre-commit hook..."
 echo "Bundling plugin into a single file..."
 
-node ../../esbuild.js ../../lib/
+# Assume the working directory is the root of the repository, as observed empirically
+echo "Current working directory: $(pwd)"
+node esbuild.js lib
