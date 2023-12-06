@@ -7,6 +7,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 plugin_name="$1"
+echo "Creating new repository with plugin name $plugin_name..."
 
 # Get the full path to the script
 script_path="$(realpath "$0")"
@@ -14,11 +15,14 @@ script_path="$(realpath "$0")"
 script_dir="$(dirname "$script_path")"
 # Create the repository directory
 repo_path="$script_dir"/"$plugin_name"
-mkdir "$repo_path"
 
+echo "Initializing repository in $repo_path..."
+mkdir "$repo_path"
 # Initialize a git repository
 pushd "$repo_path"
 git init
+
+echo "Copying initial plugin contents..."
 # Copy the plugin template files into the new repo
 cp -r "$script_dir"/lib .
 cp "$script_dir"/src/esbuild.js .
@@ -28,4 +32,9 @@ sed -i".backup" -e "s/# Your Cool Amplenote Plugin/# $plugin_name/" ./README.md
 rm ./README.md.backup
 cp "$script_dir"/.gitignore "$script_dir"/jest.config.js "$script_dir"/jsconfig.json "$script_dir"/LICENSE \
   "$script_dir"/package.json "$script_dir"/package-lock.json .
+
+echo "Installing npm dependencies..."
+npm install || echo "npm install failed; might need to install node first" && exit 1
 popd
+
+echo "Success!"
