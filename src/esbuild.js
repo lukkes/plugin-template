@@ -57,8 +57,12 @@ async function startServer(ctx, repositoryPath) {
 
   });
 
-  app.listen(port, () => {
+  let server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}/`);
+  });
+  server.on('close', () => {
+    console.log('Server has stopped');
+    ctx.dispose();
   });
 }
 
@@ -76,8 +80,8 @@ async function main() {
     await startServer(ctx, repositoryPath);
   } else {
     await processRepository(ctx, repositoryPath);
+    ctx.dispose()
   }
-  ctx.dispose()
 }
 
 main().then(() => {
