@@ -18,9 +18,15 @@ async function processRepository(repositoryPath) {
     bundle: true,
     write: false, // Don't write to disk, return in outputFiles instead
     outdir: 'out',
+    packages: 'external',
+    platform: 'node',
+    format: 'iife',
   }).then((result) => {
     for (let out of result.outputFiles) {
-      const result = out.text.replace(/^}\)\(\);$/gm, "  return plugin;\n})()");
+      // Append "return plugin;" at the end of the generated iife, before the closing brackets
+      let result = out.text.replace(/^}\)\(\);$/gm, "  return plugin;\n})()");
+      // Remove any lines attempting to import module using the esbuild __require
+      result = result.replace(/^\s+var import_.+= __require\(".+"\);/gm, "");
       const outputFile = `${distDir}/out.plugin.js`;
       return fs.writeFile(outputFile, result);
     }
