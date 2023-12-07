@@ -37,7 +37,7 @@ async function processRepository(ctx, repositoryPath) {
     // Append "return plugin;" at the end of the generated iife, before the closing brackets
     let result = out.text.replace(/^}\)\(\);$/gm, "  return plugin;\n})()");
     // Remove any lines attempting to import module using the esbuild __require
-    result = result.replace(/^\s+var import_.+= (?:__toESM\()__require\(".+"\).*;/gm, "");
+    result = result.replace(/^\s+var import_.+= (?:__toESM\()?__require\(".+"\).*;/gm, "");
     const outputFile = `${distDir}/out.plugin.js`;
     console.log('File has been written successfully');
     return fs.writeFile(outputFile, result);
