@@ -1,9 +1,19 @@
 import * as esbuild from 'esbuild';
 import { promises as fs } from "fs";
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
 
-const repositoryPath = process.argv[2];
+const esbuildSharedOptions = {
+  bundle: true,
+  write: false,
+  outdir: 'out',
+  packages: 'external',
+  platform: 'node',
+  format: 'iife',
+}
 
-async function processRepository(repositoryPath) {
+async function processRepository(ctx, repositoryPath) {
   // Check and create the dist directory if it doesn't exist
   const distDir = `${repositoryPath}/../dist`;
   try {
@@ -13,7 +23,7 @@ async function processRepository(repositoryPath) {
   }
 
   // TODO: add multiple possible entry points
-  esbuild.build({
+  let result = await ctx.rebuild({
     entryPoints: [`${repositoryPath}/plugin.js`],
     bundle: true,
     write: false, // Don't write to disk, return in outputFiles instead
@@ -21,27 +31,58 @@ async function processRepository(repositoryPath) {
     packages: 'external',
     platform: 'node',
     format: 'iife',
-  }).then((result) => {
-    for (let out of result.outputFiles) {
-      // Append "return plugin;" at the end of the generated iife, before the closing brackets
-      let result = out.text.replace(/^}\)\(\);$/gm, "  return plugin;\n})()");
-      // Remove any lines attempting to import module using the esbuild __require
-      result = result.replace(/^\s+var import_.+= __require\(".+"\);/gm, "");
-      const outputFile = `${distDir}/out.plugin.js`;
-      return fs.writeFile(outputFile, result);
-    }
-  }).then(() => {
+  });
+
+  for (let out of result.outputFiles) {
+    // Append "return plugin;" at the end of the generated iife, before the closing brackets
+    let result = out.text.replace(/^}\)\(\);$/gm, "  return plugin;\n})()");
+    // Remove any lines attempting to import module using the esbuild __require
+    result = result.replace(/^\s+var import_.+= (?:__toESM\()__require\(".+"\).*;/gm, "");
+    const outputFile = `${distDir}/out.plugin.js`;
     console.log('File has been written successfully');
-  })
-  .catch(err => {
-    console.error('Error:', err);
-    process.exit(1);
+    return fs.writeFile(outputFile, result);
+  }
+}
+
+async function startServer(ctx, repositoryPath) {
+  const app = express();
+  const port = 3000;
+
+  app.use(cors());
+
+  // Endpoint to provide the file contents
+  app.get('/code', async (req, res) => {
+    const result = await processRepository(ctx, repositoryPath);
+    res.sendFile(path.resolve(`${repositoryPath}/../dist/out.plugin.js`));
+
+  });
+
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}/`);
   });
 }
 
-if (!repositoryPath) {
-  console.error('Please provide the path of the repository as a command-line argument.');
-  process.exit(1);
+async function main() {
+  const repositoryPath = process.argv[2];
+  if (!repositoryPath) {
+    console.error('Please provide the path of the repository as a command-line argument.');
+    process.exit(1);
+  }
+
+  let opts = esbuildSharedOptions;
+  opts.entryPoints = [`${repositoryPath}/plugin.js`];
+  let ctx = await esbuild.context(opts);
+  if (process.argv.includes('--server')) {
+    await startServer(ctx, repositoryPath);
+  } else {
+    await processRepository(ctx, repositoryPath);
+  }
+  ctx.dispose()
 }
 
-processRepository(repositoryPath);
+main().then(() => {
+  console.log("Finished execution");
+}
+).catch(() => {
+  console.log("error");
+})
